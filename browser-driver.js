@@ -530,15 +530,20 @@ class Session {
   async detectBarrier() {
     if (!this.running || !this.page) return { blocked: false }
     const info = await this.evalJs(`(() => {
-      const head = (document.body && document.body.innerText || '').slice(0, 800)
-      return { url: location.href, title: document.title, head }
+      const text = (document.body && document.body.innerText || '')
+      const main = document.querySelector('main, article, #main, [role="main"]')
+      return { url: location.href, title: document.title, head: text.slice(0, 800), len: text.length, mainLen: main ? main.innerText.length : 0 }
     })()`).catch(() => null)
     if (!info) return { blocked: false }
     const haystack = info.title + ' ' + info.head
+    // Captcha barriers: unambiguous phrases — always a real block.
     if (CAPTCHA_RE.test(haystack)) {
       return { blocked: true, kind: 'captcha', title: info.title, url: info.url, text: info.head.slice(0, 300) }
     }
-    if (LOGIN_RE.test(haystack)) {
+    // Login barriers: only a REAL login wall, not a page that merely contains
+    // "登录/注册" in its chrome. Signal = the page has almost no content at
+    // all while claiming login is required. Content-rich pages pass through.
+    if (LOGIN_RE.test(haystack) && info.len < 400 && info.mainLen < 200) {
       return { blocked: true, kind: 'login', title: info.title, url: info.url, text: info.head.slice(0, 300) }
     }
     return { blocked: false }
