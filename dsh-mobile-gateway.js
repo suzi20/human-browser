@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-21'
+const BUILD = 'build-22'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -614,7 +614,7 @@ input{font:inherit;color:var(--text);border:0;outline:none;background:transparen
   <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
   <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
   <p class="pin-err" id="pinErr"></p>
-  <p class="pin-build">build-21</p>
+  <p class="pin-build">build-22</p>
 </div>
 <script>
 function selfLog(msg, extra) {
@@ -626,7 +626,7 @@ function selfLog(msg, extra) {
     }).catch(function () {})
   } catch (e) {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-21' })
+selfLog('page-loaded', { href: location.href, build: 'build-22' })
 async function submitPin() {
   selfLog('submit-clicked')
   var btn = document.querySelector('.pin-btn')
@@ -669,6 +669,13 @@ const MOBILE_TWEAK_CSS = `
      browsers mis-render (offset/cropped arbitrarily). Use a clean solid
      background on phones; desktop keeps the art. */
   body { background-image: none !important; }
+  /* The decorative fullscreen artwork layer (hero characters, welcome art,
+     details art) is positioned for desktop widths: on phones it overflows,
+     crops the figure, and mixes with the text behind it. Hide the raster
+     art images entirely (chat attachments use other URL schemes and are
+     unaffected); desktop keeps them. */
+  img[src^="data:image/webp"] { display: none !important; }
+  img { max-width: 100% !important; }
   .cr-nOG_frame { grid-template-columns: minmax(0, 1fr) 0px 0px !important; }
   .cr-nOG_sidebarCol, .cr-nOG_detailsCol {
     position: absolute !important;
@@ -703,7 +710,7 @@ const MOBILE_TWEAK_CSS = `
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: var(--dsw-alias-button-floating-fill, rgba(248, 243, 232, .92));
+    background: var(--dsw-alias-bg-base, rgba(248, 243, 232, .92));
     color: inherit;
     border: 1px solid var(--dsw-alias-border-l1, rgba(23, 35, 71, .14));
     box-shadow: 0 4px 14px rgba(13, 26, 62, .18);
