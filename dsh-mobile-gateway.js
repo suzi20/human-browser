@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-9'
+const BUILD = 'build-10'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -189,7 +189,7 @@ textarea{min-height:70px;resize:vertical}
 .tab{flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--panel)}
 .tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .badge{display:inline-block;background:var(--err);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px}
-.hidden{display:none}
+.hidden{display:none !important}
 #pinGate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;padding:24px}
 #pinGate .card{width:100%;max-width:340px}
 .notice{background:#1f2937;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
@@ -203,7 +203,7 @@ textarea{min-height:70px;resize:vertical}
   <br><br>
   <button class="btn" style="width:100%" onclick="__dsbSafeSubmit()">连接</button>
   <p class="meta" id="pinErr" style="color:var(--err);margin-top:8px"></p>
-  <p class="meta" style="margin-top:10px;text-align:center">build-9</p>
+  <p class="meta" style="margin-top:10px;text-align:center">build-10</p>
 </div></div>
 
 <div id="app" class="hidden">
@@ -258,7 +258,7 @@ function selfLog(msg, extra) {
     }).catch(() => {})
   } catch {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-9' })
+selfLog('page-loaded', { href: location.href, build: 'build-10' })
 
 let token = store.get('dshMobileToken') || ''
 let sessions = []

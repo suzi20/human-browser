@@ -116,6 +116,9 @@ function connect(wsUrl) {
 
   checks.appVisible = await evalJs("!document.getElementById('app').classList.contains('hidden')")
   checks.pinGateHidden = await evalJs("document.getElementById('pinGate').classList.contains('hidden')")
+  // REAL visibility: computed style, not just the class (catches CSS specificity bugs)
+  checks.pinGateComputed = await evalJs("getComputedStyle(document.getElementById('pinGate')).display")
+  checks.appComputed = await evalJs("getComputedStyle(document.getElementById('app')).display")
   checks.errText = await evalJs("document.getElementById('pinErr').textContent")
   checks.sessions = await evalJs("document.getElementById('sessionList').innerText").then((t) => t.slice(0, 150)).catch(() => '(n/a)')
 
@@ -132,7 +135,8 @@ function connect(wsUrl) {
 
   chrome.kill()
   try { fs.rmSync(PROFILE, { recursive: true, force: true }) } catch {}
-  const ok = checks.canary && checks.submitPinDefined && checks.appVisible && checks.pinGateHidden && consoleErrors.length === 0
+  const ok = checks.canary && checks.submitPinDefined && checks.appVisible && checks.pinGateHidden &&
+    checks.pinGateComputed === 'none' && checks.appComputed !== 'none' && consoleErrors.length === 0
   console.log(ok ? 'E2E RESULT: PASS' : 'E2E RESULT: FAIL')
   process.exit(ok ? 0 : 1)
 })().catch((e) => { console.error('E2E ERROR:', e.message); process.exit(1) })

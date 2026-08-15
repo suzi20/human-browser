@@ -10,3 +10,9 @@ downloads/
 node_modules/
 package-lock.json
 package.json
+
+# Mobile gateway runtime — never commit these.
+.mobile-pin
+gateway.log
+cloudflared.exe
+*.log
