@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-16'
+const BUILD = 'build-18'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -610,11 +610,11 @@ input{font:inherit;color:var(--text);border:0;outline:none;background:transparen
 <div class="pin-card">
   <div class="pin-logo">D</div>
   <h1>DSH Remote</h1>
-  <p class="sub">输入 PIN 码访问 DeepSeek Harness<br>通过后即为适配手机的界面</p>
+  <p class="sub">输入 PIN 码访问 DeepSeek Harness<br>通过后即为电脑上的原版界面（已适配手机）</p>
   <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
   <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
   <p class="pin-err" id="pinErr"></p>
-  <p class="pin-build">build-16</p>
+  <p class="pin-build">build-18</p>
 </div>
 <script>
 function selfLog(msg, extra) {
@@ -626,7 +626,7 @@ function selfLog(msg, extra) {
     }).catch(function () {})
   } catch (e) {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-16' })
+selfLog('page-loaded', { href: location.href, build: 'build-18' })
 async function submitPin() {
   selfLog('submit-clicked')
   var btn = document.querySelector('.pin-btn')
@@ -653,6 +653,42 @@ try { selfLog('main-ok') } catch (e) {}
 </script>
 </body>
 </html>`
+
+// ---------------------------------------------------------------------------
+// Phone-only micro tweaks injected into the served original GUI. Nothing here
+// affects desktop: every rule is scoped to narrow viewports. The GUI already
+// collapses its sidebar to an icon rail on phones; these fix the remaining
+// mobile papercuts (iOS focus zoom, tap flash, rail width, text scaling).
+// ---------------------------------------------------------------------------
+const MOBILE_TWEAK_CSS = `
+@media (max-width: 820px) {
+  html, body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  * { -webkit-tap-highlight-color: transparent; }
+  /* iOS zooms into inputs smaller than 16px on focus; pin them. */
+  input, textarea, select { font-size: 16px !important; }
+  /* Kill double-tap zoom near controls and accidental text selection. */
+  button, a, [role="button"] { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  /* Tap-target adaptation: keep the visual size, expand the invisible hit
+     area of the GUI's small controls (36x36 icon buttons and 28px pills,
+     measured at a 390px viewport). Class names are per-build; see
+     probe-gui-tap.js to re-measure after a DSH upgrade. */
+  button { position: relative; }
+  .V-ZVia_iconButton::after, .V-ZVia_newSession::after,
+  .okXF1G_iconButton::after, .okXF1G_searchButton::after,
+  .farI7q_badge::after, .AJ4KZa_trigger::after, .sr18yW_close::after,
+  .ij-XLW_workspace::after, .xc2WqG_seat::after,
+  [class*="iconButton"]::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: inherit;
+  }
+}
+@media (max-width: 420px) {
+  /* Slimmer icon rail so the conversation gets a little more room. */
+  .cr-nOG_frame { grid-template-columns: 48px minmax(0, 1fr) 0px !important; }
+}
+`
 
 // ---------------------------------------------------------------------------
 // HTTP server
@@ -751,15 +787,31 @@ if (pathname === '/favicon.ico') {
     return
   }
 
-  // 3. App shell at the root (GUI-styled mobile UI); /desktop serves the
-  //    original GUI verbatim; everything else (assets, api, ws) proxies.
+  // 3. Root serves the ORIGINAL GUI verbatim, with phone-only micro tweaks
+  //    injected. /desktop is raw verbatim (no injection); /mobile is the
+  //    hand-built mobile app shell; everything else (assets, api, ws) proxies.
   if (pathname === '/' || pathname === '/index.html') {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
-    res.end(UI)
+    try {
+      const guiRes = await fetch(TARGET + '/')
+      let html = await guiRes.text()
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', '<style id="dsh-mobile-tweaks">' + MOBILE_TWEAK_CSS + '</style></head>')
+      }
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
+      res.end(html)
+    } catch (err) {
+      res.writeHead(502, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ error: 'gateway cannot reach DSH GUI: ' + (err && err.message ? err.message : String(err)) }))
+    }
     return
   }
   if (pathname === '/desktop') {
     proxyToGui(req, res, '/', url.search)
+    return
+  }
+  if (pathname === '/mobile') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
+    res.end(UI)
     return
   }
   proxyToGui(req, res, pathname, url.search)

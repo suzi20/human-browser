@@ -1,12 +1,12 @@
 'use strict'
-/* Probe 2: full palette histogram + color tokens from the real DSH GUI. */
+/* Probe the real GUI at a phone viewport: overflow, sidebar state, sizes. */
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const os = require('node:os')
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-const PROFILE = path.join(os.tmpdir(), 'dsh-theme-probe2-' + Date.now())
+const PROFILE = path.join(os.tmpdir(), 'dsh-mobile-probe-' + Date.now())
 const delay = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function fetchJson(url) {
@@ -44,8 +44,7 @@ function connect(wsUrl) {
 ;(async () => {
   const chrome = spawn(CHROME, [
     '--headless=new', '--remote-debugging-port=0', '--remote-allow-origins=*',
-    '--no-first-run', '--disable-gpu', '--user-data-dir=' + PROFILE,
-    '--window-size=1440,900', 'about:blank',
+    '--no-first-run', '--disable-gpu', '--user-data-dir=' + PROFILE, 'about:blank',
   ], { stdio: 'ignore' })
 
   let port = null
@@ -66,8 +65,9 @@ function connect(wsUrl) {
   const { send } = c
   await send('Runtime.enable')
   await send('Page.enable')
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true })
   await send('Page.navigate', { url: 'http://127.0.0.1:3080/' })
-  await delay(6500)
+  await delay(7000)
 
   const evalJs = async (expr) => {
     const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true })
@@ -75,56 +75,47 @@ function connect(wsUrl) {
     return r.result && r.result.value
   }
 
-  // Force the target color scheme BEFORE navigation (mirrors the GUI's own
-  // boot logic). Default dark; pass 'light' as argv to probe light.
-  const wantDark = process.argv[2] !== 'light'
-  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: wantDark ? 'dark' : 'light' }] })
-
-  // 1. color tokens only
-  const tokens = await evalJs(`(function () {
+  const report = await evalJs(`(function () {
     const out = {}
-    for (const prop of document.body.style) {
-      if (!prop.startsWith('--')) continue
-      const v = document.body.style.getPropertyValue(prop).trim()
-      if (/^(#|rgb|hsl)/i.test(v)) out[prop] = v
-    }
-    return out
-  })()`)
-
-  // 2. DOM palette histogram (visible elements)
-  const hist = await evalJs(`(function () {
-    const count = {}
-    const bump = (v) => { if (!v || v === 'rgba(0, 0, 0, 0)' || v === 'transparent') return; count[v] = (count[v] || 0) + 1 }
-    const all = document.querySelectorAll('*')
-    for (const el of all) {
-      const r = el.getBoundingClientRect()
-      if (r.width < 20 || r.height < 12) continue
+    out.innerWidth = window.innerWidth
+    out.docScrollWidth = document.documentElement.scrollWidth
+    out.bodyScrollWidth = document.body.scrollWidth
+    out.hOverflow = document.documentElement.scrollWidth > window.innerWidth
+    out.viewportMeta = (document.querySelector('meta[name="viewport"]') || {}).content || null
+    out.dark = document.body.hasAttribute('data-ds-dark-theme')
+    // find the frame + panels by looking for grid containers
+    const grids = []
+    for (const el of document.querySelectorAll('div')) {
       const s = getComputedStyle(el)
-      bump(s.backgroundColor)
-      bump(s.color)
-      bump(s.borderColor)
-    }
-    return Object.entries(count).sort((a, b) => b[1] - a[1]).slice(0, 24)
-  })()`)
-
-  // 3. structural landmarks
-  const landmarks = await evalJs(`(function () {
-    const out = {}
-    const walk = (el, depth) => {
-      if (depth > 3) return
-      const s = getComputedStyle(el)
-      const r = el.getBoundingClientRect()
-      if (r.width >= 100 && r.height >= 40) {
-        const key = (el.tagName + '.' + (el.className && typeof el.className === 'string' ? el.className.split(' ')[0] : '')).slice(0, 60)
-        if (!out[key]) out[key] = { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, w: Math.round(r.width), h: Math.round(r.height) }
+      if (s.display === 'grid' && s.gridTemplateColumns && s.gridTemplateColumns.split(' ').length > 1) {
+        grids.push({ cls: (el.className || '').toString().slice(0, 60), cols: s.gridTemplateColumns })
       }
-      for (const ch of el.children) walk(ch, depth + 1)
+      if (grids.length >= 6) break
     }
-    walk(document.body, 0)
+    out.grids = grids
+    // fixed/sticky elements that may cover the screen
+    const fixed = []
+    for (const el of document.querySelectorAll('*')) {
+      const s = getComputedStyle(el)
+      if (s.position === 'fixed' || s.position === 'sticky') {
+        const r = el.getBoundingClientRect()
+        fixed.push({ cls: (el.className || '').toString().slice(0, 50), pos: s.position, w: Math.round(r.width), h: Math.round(r.height), z: s.zIndex })
+      }
+      if (fixed.length >= 10) break
+    }
+    out.fixed = fixed
+    out.fontSizes = {}
+    const bodyFont = getComputedStyle(document.body).fontSize
+    out.bodyFont = bodyFont
+    out.sidebarVisible = (function () {
+      // crude: any element >= 200px wide fixed at left?
+      return null
+    })()
+    out.textSample = document.body.innerText.slice(0, 200)
     return out
   })()`)
 
-  console.log(JSON.stringify({ tokens, hist, landmarks }, null, 2))
+  console.log(JSON.stringify(report, null, 2))
   chrome.kill()
   try { fs.rmSync(PROFILE, { recursive: true, force: true }) } catch {}
 })().catch((e) => { console.error('PROBE ERROR:', e.message); process.exit(1) })
