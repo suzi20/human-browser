@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-10'
+const BUILD = 'build-11'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -168,53 +168,90 @@ window.__dsbCanary = true;
 })();
 </script>
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#2f81f7;--ok:#3fb950;--warn:#d29922;--err:#f85149}
+:root{--bg:#0b0f17;--panel:#141a26;--panel2:#1a2231;--border:#263042;--text:#e8edf6;--muted:#8b98ad;--accent:#3b82f6;--accent2:#8b5cf6;--ok:#34d399;--warn:#fbbf24;--err:#f87171}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:12px;padding-bottom:80px}
-h1{font-size:18px;margin:4px 0 12px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+body{background:radial-gradient(1100px 500px at 85% -10%,rgba(139,92,246,.13),transparent 60%),radial-gradient(900px 460px at -10% 108%,rgba(59,130,246,.11),transparent 55%),var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:14px 14px 100px;min-height:100vh}
+h1{font-size:18px;margin:2px 0 12px;letter-spacing:.3px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 4px 14px rgba(99,102,241,.35)}
+.brand .titles{flex:1}
+.brand h1{font-size:16.5px;margin:0;font-weight:700;background:linear-gradient(90deg,#fff,#b3c0ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:7px}
+.brand .sub{font-size:11px;color:var(--muted);margin-top:1px}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;box-shadow:0 0 9px rgba(52,211,153,.85);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.card{background:linear-gradient(180deg,var(--panel),#111826);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.28);animation:rise .25s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn.danger{background:var(--err)}
-input,select,textarea{background:#0d1117;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-size:14px;width:100%}
+.btn{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff;border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.35);transition:transform .12s ease,filter .12s ease;appearance:none;-webkit-appearance:none}
+.btn:active{transform:scale(.96);filter:brightness(1.12)}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);box-shadow:none}
+.btn.ghost:active{background:var(--panel2)}
+.btn.danger{background:linear-gradient(135deg,var(--err),#dc2626);box-shadow:0 3px 10px rgba(239,68,68,.3)}
+.btn.small{padding:7px 13px;font-size:12.5px;border-radius:9px}
+input,select,textarea{background:#0d1320;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:15px;width:100%;outline:none;appearance:none;-webkit-appearance:none}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
 textarea{min-height:70px;resize:vertical}
-.msg{padding:8px 10px;border-radius:8px;margin:6px 0;background:#0d1117;border:1px solid var(--border);white-space:pre-wrap;word-break:break-word}
-.msg.user{border-left:3px solid var(--accent)}
-.msg.assistant{border-left:3px solid var(--ok)}
-.msg.tool{border-left:3px solid var(--warn);font-size:12px;color:var(--muted)}
-.msg.error{border-left:3px solid var(--err)}
-.meta{font-size:11px;color:var(--muted);margin-top:2px}
-.tabs{display:flex;gap:8px;margin-bottom:12px;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:5}
-.tab{flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--panel)}
-.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.msg{padding:9px 12px;border-radius:12px;margin:6px 0;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5;animation:rise .2s ease}
+.msg.user{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff;border-bottom-right-radius:4px;margin-left:28px;align-self:flex-end}
+.msg.assistant{background:var(--panel);border:1px solid var(--border);border-bottom-left-radius:4px;margin-right:28px}
+.msg.tool{background:#101624;border-left:3px solid var(--warn);font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;margin-right:12px}
+.msg.error{background:#1a1016;border-left:3px solid var(--err);color:#fca5a5}
+.meta{font-size:11.5px;color:var(--muted);margin-top:3px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;position:sticky;top:10px;background:rgba(11,15,23,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px;border-radius:13px;border:1px solid var(--border);z-index:5;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.tab{flex:1;text-align:center;padding:9px 6px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--muted);transition:all .18s ease;user-select:none;-webkit-user-select:none}
+.tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:600;box-shadow:0 3px 10px rgba(99,102,241,.4)}
 .badge{display:inline-block;background:var(--err);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px}
 .hidden{display:none !important}
-#pinGate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;padding:24px}
-#pinGate .card{width:100%;max-width:340px}
-.notice{background:#1f2937;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
+#pinGate{position:fixed;inset:0;background:radial-gradient(800px 460px at 50% -8%,rgba(139,92,246,.17),transparent 60%),var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;padding:24px}
+#pinGate .card{width:100%;max-width:340px;padding:26px 22px;border:1px solid rgba(99,102,241,.4);box-shadow:0 12px 44px rgba(0,0,0,.55),0 0 44px rgba(99,102,241,.14)}
+#pinGate .logo{margin:0 auto 12px;width:54px;height:54px;border-radius:16px;font-size:26px}
+#pinGate h1{text-align:center;margin-bottom:4px}
+#pinInput{text-align:center;letter-spacing:9px;font-size:22px;font-weight:700;padding:13px;margin-bottom:6px}
+.notice{background:#121826;border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.avatar{width:36px;height:36px;border-radius:11px;flex:0 0 36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;text-transform:uppercase}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.chip.run{background:rgba(52,211,153,.13);color:var(--ok)}
+.chip.run::before{content:'';width:6px;height:6px;border-radius:99px;background:var(--ok);animation:pulse 1.6s infinite}
+.chip.idle{background:rgba(139,152,173,.13);color:var(--muted)}
+.sid{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:2px}
+.chatwrap{display:flex;flex-direction:column;gap:6px}
+#chatLog{display:flex;flex-direction:column;max-height:calc(100vh - 240px);min-height:280px;overflow-y:auto;padding:2px 1px;scroll-behavior:smooth}
+.composer{position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:flex-end;background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:7px;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:6}
+.composer textarea{flex:1;border:0;background:transparent;padding:8px 6px;min-height:40px;max-height:120px;font-size:14.5px;box-shadow:none}
+.composer textarea:focus{box-shadow:none;border:0}
+.composer .btn{padding:10px 15px;border-radius:10px}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.headrow .ttl{font-weight:600;font-size:14px}
+.actions{display:flex;gap:6px}
+.empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:13.5px}
+.empty .em{font-size:34px;display:block;margin-bottom:10px}
 </style>
 </head>
 <body>
 <div id="pinGate"><div class="card">
+  <div class="logo">📡</div>
   <h1>DSH Mobile 连接</h1>
   <p class="notice">输入电脑上显示的 6 位 PIN 码以连接 DeepSeek Harness。</p>
   <input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码">
   <br><br>
   <button class="btn" style="width:100%" onclick="__dsbSafeSubmit()">连接</button>
   <p class="meta" id="pinErr" style="color:var(--err);margin-top:8px"></p>
-  <p class="meta" style="margin-top:10px;text-align:center">build-10</p>
+  <p class="meta" style="margin-top:10px;text-align:center">build-11</p>
 </div></div>
 
 <div id="app" class="hidden">
-  <div class="row" style="justify-content:space-between">
-    <h1>DSH Mobile</h1>
-    <button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="logout()">退出</button>
+  <div class="brand">
+    <div class="logo">📡</div>
+    <div class="titles">
+      <h1>DSH Mobile <span class="dot"></span></h1>
+      <div class="sub">DeepSeek Harness · 手机远程</div>
+    </div>
+    <button class="btn ghost small" onclick="logout()">退出</button>
   </div>
   <div class="tabs">
     <div class="tab on" id="tabSessions" onclick="showTab('sessions')">会话</div>
     <div class="tab" id="tabChat" onclick="showTab('chat')">聊天</div>
-    <div class="tab" id="tabTasks" onclick="showTab('tasks')">任务</div>
+    <div class="tab" id="tabTasks" onclick="showTab('tasks')">子代理</div>
   </div>
 
   <div id="viewSessions">
@@ -223,19 +260,21 @@ textarea{min-height:70px;resize:vertical}
   </div>
 
   <div id="viewChat" class="hidden">
-    <div class="row" style="justify-content:space-between;margin-bottom:8px">
-      <span id="chatTitle" style="font-weight:600">选择会话</span>
-      <button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="cancelRun()">停止</button>
+    <div class="headrow">
+      <span id="chatTitle" class="ttl">选择会话</span>
+      <div class="actions"><button class="btn ghost small" onclick="cancelRun()">停止</button></div>
     </div>
-    <div id="chatLog" style="max-height:52vh;overflow-y:auto"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="chatwrap">
+      <div id="chatLog"></div>
+    </div>
+    <div class="composer">
       <textarea id="chatInput" placeholder="给 agent 发消息…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
       <button class="btn" onclick="sendMessage()">发送</button>
     </div>
   </div>
 
   <div id="viewTasks" class="hidden">
-    <button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="loadJobs()">刷新任务</button>
+    <button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="loadJobs()">刷新列表</button>
     <div id="jobList"></div>
   </div>
 </div>
@@ -258,7 +297,7 @@ function selfLog(msg, extra) {
     }).catch(() => {})
   } catch {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-10' })
+selfLog('page-loaded', { href: location.href, build: 'build-11' })
 
 let token = store.get('dshMobileToken') || ''
 let sessions = []
@@ -340,23 +379,42 @@ function showTab(name) {
 }
 
 // ---- sessions ----
+const AVATAR_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#84cc16']
+function avatarColor(name) {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
+function initialOf(name) { return (name || '?').trim().charAt(0).toUpperCase() }
+
 async function loadSessions() {
   try {
     const data = await rpc('session.list', {})
     sessions = (data && data.items) || []
     const list = document.getElementById('sessionList')
     list.innerHTML = ''
-    if (!sessions.length) { list.innerHTML = '<div class="meta">暂无会话</div>'; return }
+    if (!sessions.length) {
+      list.innerHTML = '<div class="empty"><span class="em">📭</span>暂无会话<br>点上方"新建会话"开始</div>'
+      return
+    }
     for (const s of sessions) {
+      const preset = s.agentPreset || 'cordis'
       const card = document.createElement('div')
       card.className = 'card'
-      card.innerHTML = '<div class="row" style="justify-content:space-between">' +
-        '<b>' + esc(s.agentPreset || 'cordis') + '</b>' +
-        '<span class="meta">' + (s.running ? '● 运行中' : '○ 空闲') + '</span></div>' +
-        '<div class="meta">' + esc(s.sessionId) + '</div>' +
-        '<div class="row" style="margin-top:8px">' +
-        '<button class="btn ghost" style="flex:1" onclick="openChat(\\'' + esc(s.sessionId) + '\\')">打开</button>' +
-        '<button class="btn ghost" style="flex:1" onclick="renameSession(\\'' + esc(s.sessionId) + '\\')">重命名</button>' +
+      card.innerHTML =
+        '<div class="row">' +
+        '<div class="avatar" style="background:linear-gradient(135deg,' + avatarColor(preset) + ',#1e293b)">' + esc(initialOf(preset)) + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+        '<div class="row" style="justify-content:space-between;flex-wrap:nowrap">' +
+        '<b style="font-size:14px">' + esc(preset) + '</b>' +
+        '<span class="chip ' + (s.running ? 'run' : 'idle') + '">' + (s.running ? '运行中' : '空闲') + '</span>' +
+        '</div>' +
+        '<div class="sid">' + esc(s.sessionId) + '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="row" style="margin-top:10px">' +
+        '<button class="btn ghost small" style="flex:1" onclick="openChat(\\'' + esc(s.sessionId) + '\\')">打开</button>' +
+        '<button class="btn ghost small" style="flex:1" onclick="renameSession(\\'' + esc(s.sessionId) + '\\')">重命名</button>' +
         '</div>'
       list.appendChild(card)
     }
@@ -387,7 +445,10 @@ async function openChat(id) {
   try {
     const hist = await rpc('session.history', { sessionId: id, maxMessages: 40 })
     const events = (hist && hist.events) || []
-    if (!events.length) { appendBlock('tool', '暂无消息'); return }
+    if (!events.length) {
+      document.getElementById('chatLog').innerHTML = '<div class="empty"><span class="em">💬</span>还没有消息<br>在下方输入框发第一条吧</div>'
+      return
+    }
     for (const e of events) {
       const ev = e && e.event
       if (!ev || !ev.data) continue
@@ -464,12 +525,12 @@ async function loadJobs() {
   const list = document.getElementById('jobList')
   const parent = currentSession || (sessions.length ? sessions[0].sessionId : '')
   list.innerHTML = '<div class="meta">加载中…</div>'
-  if (!parent) { list.innerHTML = '<div class="meta">先打开一个会话，这里显示它的子代理</div>'; return }
+  if (!parent) { list.innerHTML = '<div class="empty"><span class="em">🤖</span>先打开一个会话<br>这里显示它的子代理</div>'; return }
   try {
     const data = await rpc('subagent.list', { parentSessionId: parent })
     const arr = (data && data.entries) || []
     list.innerHTML = ''
-    if (!arr.length) { list.innerHTML = '<div class="meta">暂无子代理</div>'; return }
+    if (!arr.length) { list.innerHTML = '<div class="empty"><span class="em">🌱</span>暂无子代理</div>'; return }
     for (const a of arr) {
       if (a.kind === 'diagnostic') {
         list.appendChild(card('子代理(异常)', '<div class="meta">' + esc(a.reason || '') + '</div>', ''))
@@ -479,18 +540,28 @@ async function loadJobs() {
       const label = a.label || a.id.slice(0, 8)
       const canStop = a.mode === 'continuable' && running
       const stopBtn = canStop
-        ? '<button class="btn danger" style="margin-top:6px" onclick="stopSubagent(\\'' + esc(a.id) + '\\')">终止</button>'
+        ? '<button class="btn danger small" style="flex:1" onclick="stopSubagent(\\'' + esc(a.id) + '\\')">终止</button>'
         : ''
-      list.appendChild(card(esc(label), '<div class="meta">' + (running ? '● 运行中' : '○ 空闲') + ' · ' + esc(a.id) + '</div>', stopBtn))
+      const body = '<div class="row">' +
+        '<div class="avatar" style="background:linear-gradient(135deg,' + avatarColor(a.mode || 'sub') + ',#1e293b)">' + esc(initialOf(label)) + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+        '<div class="row" style="justify-content:space-between;flex-wrap:nowrap">' +
+        '<b style="font-size:14px">' + esc(label) + '</b>' +
+        '<span class="chip ' + (running ? 'run' : 'idle') + '">' + (running ? '运行中' : '空闲') + '</span>' +
+        '</div>' +
+        '<div class="sid">' + esc(a.id) + '</div>' +
+        '</div>' +
+        '</div>' +
+        (stopBtn ? '<div class="row" style="margin-top:10px">' + stopBtn + '</div>' : '')
+      list.appendChild(card(esc(label), body, ''))
     }
   } catch (err) { list.innerHTML = '<div class="meta" style="color:var(--err)">加载子代理失败: ' + esc(err.message) + '</div>' }
 }
 
-function card(title, metaHtml, buttonsHtml) {
+function card(title, bodyHtml, buttonsHtml) {
   const div = document.createElement('div')
   div.className = 'card'
-  div.innerHTML = '<div class="row" style="justify-content:space-between"><b>' + title + '</b></div>' +
-    metaHtml + (buttonsHtml ? '<div class="row">' + buttonsHtml + '</div>' : '')
+  div.innerHTML = bodyHtml
   return div
 }
 

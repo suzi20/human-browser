@@ -92,6 +92,8 @@ function connect(wsUrl) {
   await send('Log.enable')
   await send('Page.enable')
   await send('Network.enable')
+  // phone-sized viewport
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true })
   await send('Page.navigate', { url: 'http://127.0.0.1:3081/' })
   await delay(1500)
 
@@ -132,6 +134,13 @@ function connect(wsUrl) {
   console.log(JSON.stringify(checks, null, 2))
   console.log('console errors:', consoleErrors.length ? consoleErrors : 'none')
   console.log('bad responses:', badResponses.length ? badResponses : 'none')
+
+  // screenshot for visual review
+  try {
+    const shot = await send('Page.captureScreenshot', { format: 'png' })
+    fs.writeFileSync('E:/work/plug/human-browser/mobile-app.png', Buffer.from(shot.data, 'base64'))
+    console.log('screenshot saved: mobile-app.png')
+  } catch (e) { console.log('screenshot failed:', e.message) }
 
   chrome.kill()
   try { fs.rmSync(PROFILE, { recursive: true, force: true }) } catch {}
