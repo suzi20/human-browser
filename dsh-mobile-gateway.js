@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-18'
+const BUILD = 'build-19'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -614,7 +614,7 @@ input{font:inherit;color:var(--text);border:0;outline:none;background:transparen
   <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
   <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
   <p class="pin-err" id="pinErr"></p>
-  <p class="pin-build">build-18</p>
+  <p class="pin-build">build-19</p>
 </div>
 <script>
 function selfLog(msg, extra) {
@@ -626,7 +626,7 @@ function selfLog(msg, extra) {
     }).catch(function () {})
   } catch (e) {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-18' })
+selfLog('page-loaded', { href: location.href, build: 'build-19' })
 async function submitPin() {
   selfLog('submit-clicked')
   var btn = document.querySelector('.pin-btn')
@@ -661,6 +661,34 @@ try { selfLog('main-ok') } catch (e) {}
 // mobile papercuts (iOS focus zoom, tap flash, rail width, text scaling).
 // ---------------------------------------------------------------------------
 const MOBILE_TWEAK_CSS = `
+/* DeepSeek-app layout for phones: full-screen conversation, sidebar and
+   details slide in as overlay drawers (toggle via the GUI's own buttons).
+   Matches the GUI's narrow-mode threshold (SIDEBAR_AUTO_COLLAPSE = 1024). */
+@media (max-width: 1024px) {
+  .cr-nOG_frame { grid-template-columns: minmax(0, 1fr) 0px 0px !important; }
+  .cr-nOG_sidebarCol, .cr-nOG_detailsCol {
+    position: absolute !important;
+    top: 0; bottom: 0;
+    z-index: 30;
+    transition: transform var(--ds-transition-duration-slow, .25s) ease;
+  }
+  .cr-nOG_sidebarCol {
+    left: 0;
+    width: min(84vw, 320px) !important;
+    transform: translateX(-105%);
+    box-shadow: 8px 0 24px rgba(13, 26, 62, .18);
+  }
+  .cr-nOG_detailsCol {
+    right: 0;
+    width: min(88vw, 360px) !important;
+    transform: translateX(105%);
+    box-shadow: -8px 0 24px rgba(13, 26, 62, .18);
+  }
+  .cr-nOG_frame:not([data-sidebar-collapsed]) .cr-nOG_sidebarCol { transform: none; }
+  .cr-nOG_frame:not([data-details-collapsed]) .cr-nOG_detailsCol { transform: none; }
+  /* Drag handles are pointless on a touch drawer. */
+  .cr-nOG_handle { display: none !important; }
+}
 @media (max-width: 820px) {
   html, body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   * { -webkit-tap-highlight-color: transparent; }
@@ -683,10 +711,6 @@ const MOBILE_TWEAK_CSS = `
     inset: -6px;
     border-radius: inherit;
   }
-}
-@media (max-width: 420px) {
-  /* Slimmer icon rail so the conversation gets a little more room. */
-  .cr-nOG_frame { grid-template-columns: 48px minmax(0, 1fr) 0px !important; }
 }
 `
 
