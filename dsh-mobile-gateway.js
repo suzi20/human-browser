@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-11'
+const BUILD = 'build-12'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -168,115 +168,121 @@ window.__dsbCanary = true;
 })();
 </script>
 <style>
-:root{--bg:#0b0f17;--panel:#141a26;--panel2:#1a2231;--border:#263042;--text:#e8edf6;--muted:#8b98ad;--accent:#3b82f6;--accent2:#8b5cf6;--ok:#34d399;--warn:#fbbf24;--err:#f87171}
+:root{--bg:#f5f6f8;--panel:#fff;--bubble-ai:#f2f3f5;--border:#e8eaee;--text:#1f2329;--muted:#8a919f;--accent:#4d6bfe;--accent2:#6a5cff;--ok:#00b578;--warn:#ffc300;--err:#fa5151}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:radial-gradient(1100px 500px at 85% -10%,rgba(139,92,246,.13),transparent 60%),radial-gradient(900px 460px at -10% 108%,rgba(59,130,246,.11),transparent 55%),var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:14px 14px 100px;min-height:100vh}
-h1{font-size:18px;margin:2px 0 12px;letter-spacing:.3px}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 4px 14px rgba(99,102,241,.35)}
-.brand .titles{flex:1}
-.brand h1{font-size:16.5px;margin:0;font-weight:700;background:linear-gradient(90deg,#fff,#b3c0ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:7px}
-.brand .sub{font-size:11px;color:var(--muted);margin-top:1px}
-.dot{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;box-shadow:0 0 9px rgba(52,211,153,.85);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.card{background:linear-gradient(180deg,var(--panel),#111826);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.28);animation:rise .25s ease}
-@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff;border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.35);transition:transform .12s ease,filter .12s ease;appearance:none;-webkit-appearance:none}
-.btn:active{transform:scale(.96);filter:brightness(1.12)}
-.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);box-shadow:none}
-.btn.ghost:active{background:var(--panel2)}
-.btn.danger{background:linear-gradient(135deg,var(--err),#dc2626);box-shadow:0 3px 10px rgba(239,68,68,.3)}
-.btn.small{padding:7px 13px;font-size:12.5px;border-radius:9px}
-input,select,textarea{background:#0d1320;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:15px;width:100%;outline:none;appearance:none;-webkit-appearance:none}
-input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
-textarea{min-height:70px;resize:vertical}
-.msg{padding:9px 12px;border-radius:12px;margin:6px 0;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5;animation:rise .2s ease}
-.msg.user{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff;border-bottom-right-radius:4px;margin-left:28px;align-self:flex-end}
-.msg.assistant{background:var(--panel);border:1px solid var(--border);border-bottom-left-radius:4px;margin-right:28px}
-.msg.tool{background:#101624;border-left:3px solid var(--warn);font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;margin-right:12px}
-.msg.error{background:#1a1016;border-left:3px solid var(--err);color:#fca5a5}
-.meta{font-size:11.5px;color:var(--muted);margin-top:3px}
-.tabs{display:flex;gap:6px;margin-bottom:14px;position:sticky;top:10px;background:rgba(11,15,23,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px;border-radius:13px;border:1px solid var(--border);z-index:5;box-shadow:0 4px 18px rgba(0,0,0,.25)}
-.tab{flex:1;text-align:center;padding:9px 6px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--muted);transition:all .18s ease;user-select:none;-webkit-user-select:none}
-.tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:600;box-shadow:0 3px 10px rgba(99,102,241,.4)}
-.badge{display:inline-block;background:var(--err);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+h1{font-size:18px}
+button{appearance:none;-webkit-appearance:none;border:0;background:none;cursor:pointer;font:inherit;color:inherit}
+input,textarea{font:inherit;color:var(--text);border:0;outline:none;background:transparent;width:100%}
 .hidden{display:none !important}
-#pinGate{position:fixed;inset:0;background:radial-gradient(800px 460px at 50% -8%,rgba(139,92,246,.17),transparent 60%),var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;padding:24px}
-#pinGate .card{width:100%;max-width:340px;padding:26px 22px;border:1px solid rgba(99,102,241,.4);box-shadow:0 12px 44px rgba(0,0,0,.55),0 0 44px rgba(99,102,241,.14)}
-#pinGate .logo{margin:0 auto 12px;width:54px;height:54px;border-radius:16px;font-size:26px}
-#pinGate h1{text-align:center;margin-bottom:4px}
-#pinInput{text-align:center;letter-spacing:9px;font-size:22px;font-weight:700;padding:13px;margin-bottom:6px}
-.notice{background:#121826;border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.5}
-.avatar{width:36px;height:36px;border-radius:11px;flex:0 0 36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;text-transform:uppercase}
-.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600}
-.chip.run{background:rgba(52,211,153,.13);color:var(--ok)}
+
+/* ---------- PIN gate: DeepSeek-style clean center card ---------- */
+#pinGate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;padding:28px}
+.pin-card{width:100%;max-width:340px;text-align:center}
+.pin-logo{width:64px;height:64px;border-radius:20px;margin:0 auto 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;box-shadow:0 10px 28px rgba(77,107,254,.35)}
+.pin-card h1{font-size:21px;font-weight:700;margin-bottom:6px}
+.pin-card .sub{font-size:13px;color:var(--muted);margin-bottom:26px;line-height:1.5}
+.pin-input-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:4px 14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+#pinInput{text-align:center;letter-spacing:10px;font-size:24px;font-weight:700;height:52px}
+.pin-btn{width:100%;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:16px;font-weight:600;box-shadow:0 6px 18px rgba(77,107,254,.32);transition:transform .12s ease,filter .12s ease}
+.pin-btn:active{transform:scale(.97);filter:brightness(1.1)}
+.pin-btn:disabled{opacity:.6}
+.pin-err{color:var(--err);font-size:13px;margin-top:10px;min-height:18px}
+.pin-build{color:#c3c8d2;font-size:11px;margin-top:12px}
+
+/* ---------- app shell ---------- */
+#app{display:flex;flex-direction:column;height:100vh;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+.topbar{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;background:var(--bg)}
+.topbar .ttl{flex:1;font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar .act{padding:6px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font-size:12.5px;font-weight:500;color:var(--muted)}
+.topbar .act:active{background:var(--border)}
+main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.view{flex:1;overflow-y:auto;padding:6px 14px 16px;-webkit-overflow-scrolling:touch}
+
+/* ---------- chat ---------- */
+#chatLog{display:flex;flex-direction:column;min-height:100%}
+.msg{max-width:84%;padding:10px 14px;border-radius:18px;margin:5px 0;white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.55;animation:rise .22s ease}
+@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:5px}
+.msg.assistant{align-self:flex-start;background:var(--bubble-ai);border-bottom-left-radius:5px}
+.msg.tool{align-self:flex-start;background:transparent;border:1px dashed #d8dbe3;color:var(--muted);font-size:12px;font-family:ui-monospace,Consolas,monospace;border-radius:10px;max-width:92%}
+.msg.error{align-self:flex-start;background:#fdecec;color:#d64545;border-radius:10px;font-size:13px}
+.composer{position:fixed;left:12px;right:12px;bottom:calc(68px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:6px 6px 6px 16px;box-shadow:0 4px 20px rgba(31,35,41,.08);z-index:6}
+.composer textarea{flex:1;min-height:38px;max-height:110px;padding:9px 0;font-size:15px;line-height:1.4;resize:none}
+.send-btn{width:38px;height:38px;border-radius:99px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(77,107,254,.3);transition:transform .12s ease}
+.send-btn:active{transform:scale(.92)}
+.empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:13.5px}
+.empty .em{font-size:38px;display:block;margin-bottom:10px}
+
+/* ---------- sessions / subagents cards ---------- */
+.btn-pill{display:inline-block;padding:8px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text);text-align:center;transition:transform .12s ease}
+.btn-pill:active{transform:scale(.97);background:#f0f1f4}
+.btn-pill.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:#fff;box-shadow:0 4px 12px rgba(77,107,254,.28)}
+.btn-pill.danger{color:var(--err);border-color:#f5c6c6}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:13px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.03);animation:rise .25s ease}
+.card .row{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:12px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+.card .body{flex:1;min-width:0}
+.card .line1{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.card .name{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;flex:0 0 auto}
+.chip.run{background:#e5f7f0;color:var(--ok)}
 .chip.run::before{content:'';width:6px;height:6px;border-radius:99px;background:var(--ok);animation:pulse 1.6s infinite}
-.chip.idle{background:rgba(139,152,173,.13);color:var(--muted)}
-.sid{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:2px}
-.chatwrap{display:flex;flex-direction:column;gap:6px}
-#chatLog{display:flex;flex-direction:column;max-height:calc(100vh - 240px);min-height:280px;overflow-y:auto;padding:2px 1px;scroll-behavior:smooth}
-.composer{position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:flex-end;background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:7px;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:6}
-.composer textarea{flex:1;border:0;background:transparent;padding:8px 6px;min-height:40px;max-height:120px;font-size:14.5px;box-shadow:none}
-.composer textarea:focus{box-shadow:none;border:0}
-.composer .btn{padding:10px 15px;border-radius:10px}
-.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.headrow .ttl{font-weight:600;font-size:14px}
-.actions{display:flex;gap:6px}
-.empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:13.5px}
-.empty .em{font-size:34px;display:block;margin-bottom:10px}
+.chip.idle{background:#f0f1f4;color:var(--muted)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sid{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:3px}
+.card .btns{display:flex;gap:8px;margin-top:11px}
+.card .btns .btn-pill{flex:1}
+
+/* ---------- bottom tab bar ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));z-index:7}
+.tab{flex:1;text-align:center;padding:7px 4px;border-radius:12px;font-size:11.5px;color:var(--muted);transition:all .16s ease;user-select:none;-webkit-user-select:none}
+.tab .ic{display:block;font-size:19px;margin-bottom:2px}
+.tab.on{color:var(--accent);font-weight:600}
+.tab.on .ic{transform:translateY(-1px)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(31,35,41,.92);color:#fff;font-size:13px;padding:9px 16px;border-radius:99px;z-index:20;max-width:86%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.2);animation:rise .2s ease}
 </style>
 </head>
 <body>
-<div id="pinGate"><div class="card">
-  <div class="logo">📡</div>
-  <h1>DSH Mobile 连接</h1>
-  <p class="notice">输入电脑上显示的 6 位 PIN 码以连接 DeepSeek Harness。</p>
-  <input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码">
-  <br><br>
-  <button class="btn" style="width:100%" onclick="__dsbSafeSubmit()">连接</button>
-  <p class="meta" id="pinErr" style="color:var(--err);margin-top:8px"></p>
-  <p class="meta" style="margin-top:10px;text-align:center">build-11</p>
+<div id="pinGate"><div class="pin-card">
+  <div class="pin-logo">D</div>
+  <h1>DSH Mobile</h1>
+  <p class="sub">输入电脑上显示的 6 位 PIN 码<br>连接 DeepSeek Harness</p>
+  <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
+  <button class="pin-btn" onclick="__dsbSafeSubmit()">连接</button>
+  <p class="pin-err" id="pinErr"></p>
+  <p class="pin-build">build-12</p>
 </div></div>
 
 <div id="app" class="hidden">
-  <div class="brand">
-    <div class="logo">📡</div>
-    <div class="titles">
-      <h1>DSH Mobile <span class="dot"></span></h1>
-      <div class="sub">DeepSeek Harness · 手机远程</div>
-    </div>
-    <button class="btn ghost small" onclick="logout()">退出</button>
+  <div class="topbar">
+    <span class="ttl" id="pageTitle">💬 聊天</span>
+    <button class="act" id="actStop" onclick="cancelRun()">⏹ 停止</button>
+    <button class="act" onclick="logout()">退出</button>
   </div>
-  <div class="tabs">
-    <div class="tab on" id="tabSessions" onclick="showTab('sessions')">会话</div>
-    <div class="tab" id="tabChat" onclick="showTab('chat')">聊天</div>
-    <div class="tab" id="tabTasks" onclick="showTab('tasks')">子代理</div>
-  </div>
-
-  <div id="viewSessions">
-    <button class="btn" style="width:100%;margin-bottom:10px" onclick="createSession()">＋ 新建会话</button>
-    <div id="sessionList"></div>
-  </div>
-
-  <div id="viewChat" class="hidden">
-    <div class="headrow">
-      <span id="chatTitle" class="ttl">选择会话</span>
-      <div class="actions"><button class="btn ghost small" onclick="cancelRun()">停止</button></div>
-    </div>
-    <div class="chatwrap">
+  <main>
+    <div id="viewChat" class="view">
       <div id="chatLog"></div>
+      <div class="composer">
+        <textarea id="chatInput" placeholder="给 agent 发消息…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
     </div>
-    <div class="composer">
-      <textarea id="chatInput" placeholder="给 agent 发消息…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
-      <button class="btn" onclick="sendMessage()">发送</button>
+    <div id="viewSessions" class="view hidden">
+      <button class="btn-pill primary" style="width:100%;margin-bottom:12px" onclick="createSession()">＋ 新建会话</button>
+      <div id="sessionList"></div>
     </div>
-  </div>
-
-  <div id="viewTasks" class="hidden">
-    <button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="loadJobs()">刷新列表</button>
-    <div id="jobList"></div>
-  </div>
+    <div id="viewTasks" class="view hidden">
+      <button class="btn-pill" style="width:100%;margin-bottom:12px" onclick="loadJobs()">⟳ 刷新列表</button>
+      <div id="jobList"></div>
+    </div>
+  </main>
+  <nav class="tabbar">
+    <div class="tab on" id="tabChat" onclick="showTab('chat')"><span class="ic">💬</span>聊天</div>
+    <div class="tab" id="tabSessions" onclick="showTab('sessions')"><span class="ic">🗂</span>会话</div>
+    <div class="tab" id="tabTasks" onclick="showTab('tasks')"><span class="ic">🤖</span>子代理</div>
+  </nav>
 </div>
 
 <script>
@@ -297,7 +303,7 @@ function selfLog(msg, extra) {
     }).catch(() => {})
   } catch {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-11' })
+selfLog('page-loaded', { href: location.href, build: 'build-12' })
 
 let token = store.get('dshMobileToken') || ''
 let sessions = []
@@ -326,7 +332,7 @@ function cryptoRandomUUID() {
 // ---- PIN gate ----
 async function submitPin() {
   selfLog('submit-clicked')
-  const btn = document.querySelector('#pinGate .btn')
+  const btn = document.querySelector('#pinGate .pin-btn')
   const err = document.getElementById('pinErr')
   const pin = document.getElementById('pinInput').value.trim()
   err.textContent = ''
@@ -368,12 +374,16 @@ window.addEventListener('error', (e) => {
 function logout() { store.del('dshMobileToken'); location.reload() }
 
 // ---- tabs ----
+const TAB_TITLES = { chat: '💬 聊天', sessions: '🗂 会话', tasks: '🤖 子代理' }
 function showTab(name) {
   document.querySelectorAll('.tab').forEach((t) => t.classList.remove('on'))
   document.getElementById('tab' + name[0].toUpperCase() + name.slice(1)).classList.add('on')
   document.getElementById('viewSessions').classList.toggle('hidden', name !== 'sessions')
   document.getElementById('viewChat').classList.toggle('hidden', name !== 'chat')
   document.getElementById('viewTasks').classList.toggle('hidden', name !== 'tasks')
+  document.getElementById('pageTitle').textContent = TAB_TITLES[name] || 'DSH Mobile'
+  document.getElementById('actStop').style.display = name === 'chat' ? '' : 'none'
+  if (name === 'chat') document.getElementById('pageTitle').textContent = currentSession ? '💬 ' + currentSession.slice(0, 8) : TAB_TITLES.chat
   if (name === 'sessions') loadSessions()
   if (name === 'tasks') loadJobs()
 }
@@ -404,17 +414,15 @@ async function loadSessions() {
       card.innerHTML =
         '<div class="row">' +
         '<div class="avatar" style="background:linear-gradient(135deg,' + avatarColor(preset) + ',#1e293b)">' + esc(initialOf(preset)) + '</div>' +
-        '<div style="flex:1;min-width:0">' +
-        '<div class="row" style="justify-content:space-between;flex-wrap:nowrap">' +
-        '<b style="font-size:14px">' + esc(preset) + '</b>' +
-        '<span class="chip ' + (s.running ? 'run' : 'idle') + '">' + (s.running ? '运行中' : '空闲') + '</span>' +
-        '</div>' +
+        '<div class="body">' +
+        '<div class="line1"><span class="name">' + esc(preset) + '</span>' +
+        '<span class="chip ' + (s.running ? 'run' : 'idle') + '">' + (s.running ? '运行中' : '空闲') + '</span></div>' +
         '<div class="sid">' + esc(s.sessionId) + '</div>' +
         '</div>' +
         '</div>' +
-        '<div class="row" style="margin-top:10px">' +
-        '<button class="btn ghost small" style="flex:1" onclick="openChat(\\'' + esc(s.sessionId) + '\\')">打开</button>' +
-        '<button class="btn ghost small" style="flex:1" onclick="renameSession(\\'' + esc(s.sessionId) + '\\')">重命名</button>' +
+        '<div class="btns">' +
+        '<button class="btn-pill" onclick="openChat(\\'' + esc(s.sessionId) + '\\')">打开</button>' +
+        '<button class="btn-pill" onclick="renameSession(\\'' + esc(s.sessionId) + '\\')">重命名</button>' +
         '</div>'
       list.appendChild(card)
     }
@@ -439,7 +447,7 @@ async function renameSession(id) {
 // ---- chat ----
 async function openChat(id) {
   currentSession = id
-  document.getElementById('chatTitle').textContent = '会话 ' + id.slice(0, 8)
+  document.getElementById('pageTitle').textContent = '💬 ' + id.slice(0, 8)
   document.getElementById('chatLog').innerHTML = ''
   showTab('chat')
   try {
@@ -540,7 +548,7 @@ async function loadJobs() {
       const label = a.label || a.id.slice(0, 8)
       const canStop = a.mode === 'continuable' && running
       const stopBtn = canStop
-        ? '<button class="btn danger small" style="flex:1" onclick="stopSubagent(\\'' + esc(a.id) + '\\')">终止</button>'
+        ? '<button class="btn-pill danger" style="flex:1" onclick="stopSubagent(\\'' + esc(a.id) + '\\')">终止</button>'
         : ''
       const body = '<div class="row">' +
         '<div class="avatar" style="background:linear-gradient(135deg,' + avatarColor(a.mode || 'sub') + ',#1e293b)">' + esc(initialOf(label)) + '</div>' +
@@ -592,7 +600,7 @@ function connectEvents() {
 
 // ---- misc ----
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
-function toast(t) { const d = document.createElement('div'); d.className = 'notice'; d.textContent = t; document.body.prepend(d); setTimeout(() => d.remove(), 3000) }
+function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600) }
 function notify(text) {
   if (document.visibilityState === 'visible') return
   try { if (Notification.permission === 'granted') new Notification('DSH Mobile', { body: text }) } catch {}
@@ -601,9 +609,15 @@ function notify(text) {
 async function enterApp() {
   document.getElementById('pinGate').classList.add('hidden')
   document.getElementById('app').classList.remove('hidden')
-  loadSessions()
   connectEvents()
   try { if (Notification.permission === 'default') Notification.requestPermission() } catch {}
+  // Chat-first, DeepSeek style: land directly in the most relevant session.
+  try {
+    await loadSessions()
+    const best = sessions.find((s) => s.running) || sessions[0]
+    if (best) openChat(best.sessionId)
+    else showTab('sessions')
+  } catch { showTab('sessions') }
 }
 
 // boot

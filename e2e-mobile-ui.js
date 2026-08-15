@@ -124,12 +124,13 @@ function connect(wsUrl) {
   checks.errText = await evalJs("document.getElementById('pinErr').textContent")
   checks.sessions = await evalJs("document.getElementById('sessionList').innerText").then((t) => t.slice(0, 150)).catch(() => '(n/a)')
 
-  // open the RUNNING session (second card) and verify chat history renders (read-only)
-  await evalJs("(function(){ var cards = document.querySelectorAll('#sessionList .card'); for (var i = 0; i < cards.length; i++) { if (cards[i].innerText.indexOf('运行中') >= 0) { var b = cards[i].querySelector('.btn'); if (b) b.click(); return } } })()")
+  // DeepSeek-style: app should have auto-opened the best session into chat
   await delay(2500)
-  checks.chatTitle = await evalJs("document.getElementById('chatTitle').textContent")
+  checks.pageTitle = await evalJs("document.getElementById('pageTitle').textContent")
   checks.chatLogLen = await evalJs("document.getElementById('chatLog').innerText.length")
   checks.chatLogSample = await evalJs("document.getElementById('chatLog').innerText").then((t) => t.slice(0, 200)).catch(() => '(n/a)')
+  checks.chatViewVisible = await evalJs("!document.getElementById('viewChat').classList.contains('hidden')")
+  checks.tabChatOn = await evalJs("document.getElementById('tabChat').classList.contains('on')")
 
   console.log(JSON.stringify(checks, null, 2))
   console.log('console errors:', consoleErrors.length ? consoleErrors : 'none')

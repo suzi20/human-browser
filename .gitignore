@@ -16,3 +16,4 @@ package.json
 gateway.log
 cloudflared.exe
 *.log
+mobile-app.png
