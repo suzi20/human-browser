@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-19'
+const BUILD = 'build-20'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -614,7 +614,7 @@ input{font:inherit;color:var(--text);border:0;outline:none;background:transparen
   <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
   <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
   <p class="pin-err" id="pinErr"></p>
-  <p class="pin-build">build-19</p>
+  <p class="pin-build">build-20</p>
 </div>
 <script>
 function selfLog(msg, extra) {
@@ -626,7 +626,7 @@ function selfLog(msg, extra) {
     }).catch(function () {})
   } catch (e) {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-19' })
+selfLog('page-loaded', { href: location.href, build: 'build-20' })
 async function submitPin() {
   selfLog('submit-clicked')
   var btn = document.querySelector('.pin-btn')
@@ -688,6 +688,36 @@ const MOBILE_TWEAK_CSS = `
   .cr-nOG_frame:not([data-details-collapsed]) .cr-nOG_detailsCol { transform: none; }
   /* Drag handles are pointless on a touch drawer. */
   .cr-nOG_handle { display: none !important; }
+  /* Floating menu button (injected): opens/closes the sidebar drawer. Uses the
+     GUI's own design tokens so it follows light/dark themes. */
+  #dsh-mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: calc(8px + env(safe-area-inset-top, 0px));
+    left: 10px;
+    z-index: 60;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--dsw-alias-button-floating-fill, rgba(248, 243, 232, .92));
+    color: inherit;
+    border: 1px solid var(--dsw-alias-border-l1, rgba(23, 35, 71, .14));
+    box-shadow: 0 4px 14px rgba(13, 26, 62, .18);
+    font-size: 19px;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: left var(--ds-transition-duration-slow, .25s) ease;
+  }
+  @media (max-width: 1024px) {
+    #dsh-mobile-menu-btn { display: flex; }
+  }
+  /* When the drawer is open, slide the button next to its edge. */
+  body:has(.cr-nOG_frame:not([data-sidebar-collapsed])) #dsh-mobile-menu-btn {
+    left: calc(min(84vw, 320px) + 10px);
+  }
 }
 @media (max-width: 820px) {
   html, body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -819,7 +849,7 @@ if (pathname === '/favicon.ico') {
       const guiRes = await fetch(TARGET + '/')
       let html = await guiRes.text()
       if (html.includes('</head>')) {
-        html = html.replace('</head>', '<style id="dsh-mobile-tweaks">' + MOBILE_TWEAK_CSS + '</style></head>')
+        html = html.replace('</head>', '<style id="dsh-mobile-tweaks">' + MOBILE_TWEAK_CSS + '</style><script id="dsh-mobile-menu">(function(){function findToggle(){return document.querySelector(".V-ZVia_toggle")||document.querySelector(".AJ4KZa_trigger")}var btn=document.createElement("button");btn.id="dsh-mobile-menu-btn";btn.type="button";btn.textContent="\\u2630";btn.setAttribute("aria-label","\\u4f1a\\u8bdd\\u5217\\u8868");btn.addEventListener("click",function(){var t=findToggle();if(t)t.click()});(function wait(){if(document.body)document.body.appendChild(btn);else setTimeout(wait,50)})()})();</script></head>')
       }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
       res.end(html)

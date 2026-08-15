@@ -1,12 +1,12 @@
 'use strict'
-/* Verify the DeepSeek-app drawer layout on the gateway-served GUI. */
+/* Map the top-left region of the GUI at phone width to place a menu button. */
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const os = require('node:os')
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-const PROFILE = path.join(os.tmpdir(), 'dsh-drawer-probe-' + Date.now())
+const PROFILE = path.join(os.tmpdir(), 'dsh-topleft-probe-' + Date.now())
 const delay = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function fetchJson(url) {
@@ -84,32 +84,27 @@ function connect(wsUrl) {
     return r.result && r.result.value
   }
 
-  const state = async () => evalJs(`(function () {
-    const frame = document.querySelector('.cr-nOG_frame')
-    const sb = document.querySelector('.cr-nOG_sidebarCol')
-    const btn = document.getElementById('dsh-mobile-menu-btn')
-    const sbR = sb ? sb.getBoundingClientRect() : null
-    const btnR = btn ? btn.getBoundingClientRect() : null
-    return {
-      frameCols: frame ? getComputedStyle(frame).gridTemplateColumns : null,
-      sidebarCollapsed: frame ? frame.hasAttribute('data-sidebar-collapsed') : null,
-      sbRect: sbR ? { left: Math.round(sbR.left), right: Math.round(sbR.right), w: Math.round(sbR.width) } : null,
-      menuBtn: btnR ? { left: Math.round(btnR.left), top: Math.round(btnR.top), w: Math.round(btnR.width), h: Math.round(btnR.height), display: getComputedStyle(btn).display } : 'MISSING',
+  const report = await evalJs(`(function () {
+    const out = { topStrip: [], toggles: [] }
+    // everything with a rect in the top 90px
+    for (const el of document.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect()
+      if (r.width === 0 || r.height === 0) continue
+      if (r.top < 90 && r.bottom > 0) {
+        const s = getComputedStyle(el)
+        if (s.position === 'fixed' || s.position === 'absolute' || s.position === 'sticky' || (el.tagName === 'BUTTON') || (el.tagName === 'DIV' && r.width < 200 && r.height > 20 && r.height < 80)) {
+          out.topStrip.push({ tag: el.tagName.toLowerCase(), cls: ((typeof el.className === 'string' ? el.className : '') || '').slice(0, 46), x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), vis: s.display !== 'none' && r.bottom > 0 })
+        }
+      }
+      if ((typeof el.className === 'string' && /toggle|trigger/i.test(el.className)) && out.toggles.length < 8) {
+        const r2 = el.getBoundingClientRect()
+        out.toggles.push({ cls: el.className.slice(0, 46), x: Math.round(r2.left), y: Math.round(r2.top), w: Math.round(r2.width), h: Math.round(r2.height), onScreen: r2.left >= 0 && r2.right <= 390 && r2.bottom > 0 })
+      }
     }
+    return out
   })()`)
 
-  const out = {}
-  out.collapsed = await state()
-  // click the floating menu button to open the drawer
-  await evalJs(`(function () { var b = document.getElementById('dsh-mobile-menu-btn'); if (b) b.click(); })()`)
-  await delay(800)
-  out.open = await state()
-  // click again to close
-  await evalJs(`(function () { var b = document.getElementById('dsh-mobile-menu-btn'); if (b) b.click(); })()`)
-  await delay(800)
-  out.closedAgain = await state()
-
-  console.log(JSON.stringify(out, null, 2))
+  console.log(JSON.stringify(report, null, 2))
   chrome.kill()
   try { fs.rmSync(PROFILE, { recursive: true, force: true }) } catch {}
 })().catch((e) => { console.error('PROBE ERROR:', e.message); process.exit(1) })
