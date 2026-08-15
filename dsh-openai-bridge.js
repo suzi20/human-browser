@@ -98,6 +98,7 @@ async function runCompletion(req, res, body, stream) {
   // assembled assistant message as a fallback).
   let lastSeq = 0
   let emitted = ''
+  let finalText = null
   let finished = false
   let lastActivity = Date.now()
   const started = Date.now()
@@ -126,8 +127,6 @@ async function runCompletion(req, res, body, stream) {
       logf('history poll error: ' + err.message)
     }
     let sawFinal = false
-    let finalText = null
-    let finalReasoning = ''
     for (const e of events) {
       const ev = e && e.event
       if (!ev || !ev.data) continue
@@ -138,7 +137,10 @@ async function runCompletion(req, res, body, stream) {
       if (t === 'assistant/chunk' && d.chunk) {
         const ct = d.chunk.type
         if (ct === 'text-delta' && typeof d.chunk.text === 'string') {
-          if (stream && d.chunk.text) { emitted += d.chunk.text; chunk(d.chunk.text, false) }
+          if (d.chunk.text) {
+            emitted += d.chunk.text
+            if (stream) chunk(d.chunk.text, false)
+          }
         } else if (ct === 'reasoning-delta' && stream && typeof d.chunk.text === 'string') {
           chunk(d.chunk.text, true)
         }
@@ -146,7 +148,6 @@ async function runCompletion(req, res, body, stream) {
         sawFinal = true
         const blocks = (d.message.content || [])
         finalText = blocks.filter((b) => b.type === 'text').map((b) => b.text).join('')
-        finalReasoning = blocks.filter((b) => b.type === 'reasoning').map((b) => b.text).join('')
       } else if (t === 'turn/end' || t === 'finish') {
         sawFinal = true
       }
@@ -165,7 +166,10 @@ async function runCompletion(req, res, body, stream) {
     if (!finished) await delay(STREAM_POLL_MS)
   }
 
-  return { sessionId, text: emitted }
+  // Non-stream: prefer the assembled final message (authoritative), else the
+  // accumulated deltas. Streaming already flushed deltas to the client.
+  const text = finalText !== null && finalText.length >= emitted.length ? finalText : emitted
+  return { sessionId, text }
 }
 
 // ---- HTTP server ---------------------------------------------------------
@@ -225,7 +229,7 @@ const server = http.createServer(async (req, res) => {
         'cache-control': 'no-cache',
         connection: 'keep-alive',
       })
-      if (!stream) res.write(': connected\n\n')
+      if (stream) res.write(': connected\n\n')
       const { text } = await runCompletion(req, res, body, stream)
       if (stream) {
         res.write('data: [DONE]\n\n')
