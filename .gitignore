@@ -1,0 +1,12 @@
+# Runtime data — NEVER commit these.
+# profile/ contains a real Chrome user-data-dir with cookies, logins and
+# identity data. Publishing it would leak credentials.
+profile/
+shots/
+crawls/
+downloads/
+
+# Node
+node_modules/
+package-lock.json
+package.json
