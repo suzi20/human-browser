@@ -107,30 +107,25 @@ function connect(wsUrl) {
   checks.canary = await evalJs('window.__dsbCanary === true')
   checks.build = await evalJs("(document.body.innerText.match(/build-\\d+/) || ['none'])[0]")
   checks.submitPinDefined = await evalJs("typeof window.submitPin === 'function'")
-  checks.mainOkRan = await evalJs("(function(){ try { return true } catch(e){ return false } })()")
-  checks.pageText = (await evalJs('document.body.innerText')).slice(0, 200)
+  checks.pageText = (await evalJs('document.body.innerText')).slice(0, 160)
 
-  // fill PIN and click 连接
+  // PIN page: fill PIN and click 进入 -> cookie -> reload -> app shell
   await evalJs("document.getElementById('pinInput').value = '243472'")
-  await evalJs("document.getElementById('pinInput').dispatchEvent(new Event('input'))")
   await evalJs("window.__dsbSafeSubmit()")
-  await delay(1500)
+  await delay(3000)
 
-  checks.appVisible = await evalJs("!document.getElementById('app').classList.contains('hidden')")
-  checks.pinGateHidden = await evalJs("document.getElementById('pinGate').classList.contains('hidden')")
-  // REAL visibility: computed style, not just the class (catches CSS specificity bugs)
-  checks.pinGateComputed = await evalJs("getComputedStyle(document.getElementById('pinGate')).display")
-  checks.appComputed = await evalJs("getComputedStyle(document.getElementById('app')).display")
-  checks.errText = await evalJs("document.getElementById('pinErr').textContent")
-  checks.sessions = await evalJs("document.getElementById('sessionList').innerText").then((t) => t.slice(0, 150)).catch(() => '(n/a)')
+  checks.afterReloadTitle = await evalJs('document.title')
+  checks.appVisible = await evalJs("!!document.getElementById('app') && !document.getElementById('app').classList.contains('hidden')")
+  checks.appComputed = await evalJs("document.getElementById('app') ? getComputedStyle(document.getElementById('app')).display : 'missing'")
+  checks.tabChatOn = await evalJs("document.getElementById('tabChat') && document.getElementById('tabChat').classList.contains('on')")
 
-  // DeepSeek-style: app should have auto-opened the best session into chat
+  // chat-first: should have auto-opened the most relevant session
   await delay(2500)
   checks.pageTitle = await evalJs("document.getElementById('pageTitle').textContent")
   checks.chatLogLen = await evalJs("document.getElementById('chatLog').innerText.length")
-  checks.chatLogSample = await evalJs("document.getElementById('chatLog').innerText").then((t) => t.slice(0, 200)).catch(() => '(n/a)')
+  checks.chatLogSample = await evalJs("document.getElementById('chatLog').innerText").then((t) => t.slice(0, 160)).catch(() => '(n/a)')
   checks.chatViewVisible = await evalJs("!document.getElementById('viewChat').classList.contains('hidden')")
-  checks.tabChatOn = await evalJs("document.getElementById('tabChat').classList.contains('on')")
+  checks.sessions = await evalJs("document.getElementById('sessionList').innerText").then((t) => t.slice(0, 120)).catch(() => '(n/a)')
 
   console.log(JSON.stringify(checks, null, 2))
   console.log('console errors:', consoleErrors.length ? consoleErrors : 'none')
@@ -145,8 +140,8 @@ function connect(wsUrl) {
 
   chrome.kill()
   try { fs.rmSync(PROFILE, { recursive: true, force: true }) } catch {}
-  const ok = checks.canary && checks.submitPinDefined && checks.appVisible && checks.pinGateHidden &&
-    checks.pinGateComputed === 'none' && checks.appComputed !== 'none' && consoleErrors.length === 0
+  const ok = checks.canary && checks.submitPinDefined && checks.appVisible &&
+    checks.appComputed !== 'none' && checks.tabChatOn && checks.chatLogLen > 0 && consoleErrors.length === 0
   console.log(ok ? 'E2E RESULT: PASS' : 'E2E RESULT: FAIL')
   process.exit(ok ? 0 : 1)
 })().catch((e) => { console.error('E2E ERROR:', e.message); process.exit(1) })

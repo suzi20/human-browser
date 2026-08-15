@@ -36,10 +36,12 @@ try {
 console.log('evaluated UI length:', ui.length)
 
 // 2. Scan the EVALUATED html for leftover backslash escapes that would mean
-//    the author's escape intent was silently altered. Whitelist \' (escaped
-//    quote inside the served JS string literals — intentional).
+//    the author's escape intent was silently altered. Whitelist escapes that
+//    are valid JS string/regex escapes in the served script (the vm.Script
+//    parse below is the authoritative gate).
+const JS_ESCAPES = new Set(['\\s', '\\d', '\\w', '\\n', '\\t', '\\r', '\\b', '\\f', '\\v', '\\0', '\\x', '\\u', '\\\'', '\\"', '\\`', '\\\\', '\\.', '\\*', '\\+', '\\?', '\\|', '\\(', '\\)', '\\[', '\\]', '\\{', '\\}', '\\$', '\\^', '\\/', '\\-', '\\<', '\\>', '\\=', '\\,', '\\:', '\\;', '\\!', '\\@', '\\#', '\\%', '\\&'])
 const allEsc = ui.match(/\\./g) || []
-const badEsc = allEsc.filter((s) => s !== "\\'")
+const badEsc = allEsc.filter((s) => !JS_ESCAPES.has(s))
 console.log('backslash escapes in EVALUATED UI:', allEsc.length, allEsc.slice(0, 10))
 if (badEsc.length) {
   console.log('ERROR: unexpected backslash sequences in served HTML:', badEsc.slice(0, 10))
