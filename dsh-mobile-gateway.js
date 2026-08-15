@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-12'
+const BUILD = 'build-15'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -61,7 +61,10 @@ function issueToken() {
 
 function authorized(req) {
   const header = req.headers['x-dsh-token']
-  return typeof header === 'string' && tokens.has(header)
+  if (typeof header === 'string' && tokens.has(header)) return true
+  const cookie = req.headers.cookie || ''
+  const m = cookie.match(/(?:^|;\s*)dsh_pin=([^;]+)/)
+  return !!m && tokens.has(m[1])
 }
 
 // ---------------------------------------------------------------------------
@@ -635,6 +638,141 @@ try { selfLog('main-ok') } catch (e) {}
 </html>`
 
 // ---------------------------------------------------------------------------
+// Verbatim-GUI mode: after PIN auth (cookie), every request is proxied to the
+// original DSH GUI with its host/origin guard satisfied.
+// ---------------------------------------------------------------------------
+function proxyToGui(req, res, pathname, search) {
+  const url = new URL(pathname + search, TARGET)
+  const headers = {}
+  for (const key of Object.keys(req.headers)) {
+    const lower = key.toLowerCase()
+    // The GUI 403s on foreign Host/Origin; http.request sets Host from the
+    // target URL, and stripping Origin makes the GUI see a local request.
+    if (lower === 'host' || lower === 'origin' || lower === 'referer' || lower === 'cookie' || lower === 'x-dsh-token' || lower === 'connection' || lower === 'upgrade' || lower === 'accept-encoding') continue
+    headers[key] = req.headers[key]
+  }
+  if (!headers.accept) headers.accept = 'application/json'
+  const targetReq = http.request(
+    url,
+    { method: req.method, headers },
+    (targetRes) => {
+      const out = {
+        'content-type': targetRes.headers['content-type'] || 'application/json',
+      }
+      if (targetRes.headers['cache-control']) out['cache-control'] = targetRes.headers['cache-control']
+      if (targetRes.headers.etag) out.etag = targetRes.headers.etag
+      res.writeHead(targetRes.statusCode || 500, out)
+      targetRes.pipe(res)
+    },
+  )
+  targetReq.on('error', (err) => {
+    res.writeHead(502, { 'content-type': 'application/json' })
+    res.end(JSON.stringify({ error: 'gateway cannot reach DSH GUI: ' + err.message }))
+  })
+  req.pipe(targetReq)
+}
+
+// ---------------------------------------------------------------------------
+// Minimal PIN page served to unauthenticated visitors in verbatim-GUI mode.
+// ---------------------------------------------------------------------------
+const PIN_UI = `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8">
+<title>DSH Remote</title>
+<script>
+/* js-canary (ES5): reports page/script health to the gateway log. */
+window.__dsbCanary = true;
+(function () {
+  function report(msg, extra) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('POST', '/log', true);
+      x.setRequestHeader('content-type', 'application/json');
+      x.send(JSON.stringify({ msg: msg, at: new Date().toISOString(), ua: (navigator.userAgent || '').slice(0, 120), extra: extra || null }));
+    } catch (e) {}
+  }
+  report('js-canary');
+  window.addEventListener('error', function (e) {
+    report('js-error', { error: String((e && e.message) || e), line: (e && e.lineno) || 0 });
+  });
+  window.__dsbSafeSubmit = function () {
+    if (typeof window.submitPin === 'function') { window.submitPin(); return }
+    report('submit-missing')
+    var err = document.getElementById('pinErr')
+    if (err) err.textContent = '页面脚本未运行'
+  }
+})();
+</script>
+<style>
+:root{--bg:#f5f6f8;--border:#e8eaee;--text:#1f2329;--muted:#8a919f;--accent:#4d6bfe;--accent2:#6a5cff;--err:#fa5151}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;padding:28px;-webkit-font-smoothing:antialiased}
+.pin-card{width:100%;max-width:340px;text-align:center}
+.pin-logo{width:64px;height:64px;border-radius:20px;margin:0 auto 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;box-shadow:0 10px 28px rgba(77,107,254,.35)}
+h1{font-size:21px;font-weight:700;margin-bottom:6px}
+.sub{font-size:13px;color:var(--muted);margin-bottom:26px;line-height:1.5}
+.pin-input-wrap{background:#fff;border:1px solid var(--border);border-radius:14px;padding:4px 14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+input{font:inherit;color:var(--text);border:0;outline:none;background:transparent;width:100%;text-align:center;letter-spacing:10px;font-size:24px;font-weight:700;height:52px}
+.pin-btn{width:100%;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:16px;font-weight:600;border:0;box-shadow:0 6px 18px rgba(77,107,254,.32);transition:transform .12s ease,filter .12s ease;cursor:pointer}
+.pin-btn:active{transform:scale(.97);filter:brightness(1.1)}
+.pin-btn:disabled{opacity:.6}
+.pin-err{color:var(--err);font-size:13px;margin-top:10px;min-height:18px}
+.pin-build{color:#c3c8d2;font-size:11px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="pin-card">
+  <div class="pin-logo">D</div>
+  <h1>DSH Remote</h1>
+  <p class="sub">输入 PIN 码访问 DeepSeek Harness<br>通过后即为电脑上的完整界面</p>
+  <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
+  <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
+  <p class="pin-err" id="pinErr"></p>
+  <p class="pin-build">build-15</p>
+</div>
+<script>
+function selfLog(msg, extra) {
+  try {
+    fetch('/log', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(Object.assign({ msg: msg, at: new Date().toISOString(), ua: navigator.userAgent.slice(0, 80) }, extra || {})),
+    }).catch(function () {})
+  } catch (e) {}
+}
+selfLog('page-loaded', { href: location.href, build: 'build-15' })
+async function submitPin() {
+  selfLog('submit-clicked')
+  var btn = document.querySelector('.pin-btn')
+  var err = document.getElementById('pinErr')
+  var pin = document.getElementById('pinInput').value.trim()
+  err.textContent = ''
+  if (!pin) { err.textContent = '请输入 PIN 码'; return }
+  btn.disabled = true
+  btn.textContent = '验证中…'
+  try {
+    var res = await fetch('/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin: pin }) })
+    selfLog('auth-response', { status: res.status })
+    if (res.ok) { location.reload() } else { err.textContent = 'PIN 错误，请重新输入' }
+  } catch (e) {
+    selfLog('auth-error', { error: String(e && e.message ? e.message : e) })
+    err.textContent = '连接失败: ' + (e && e.message ? e.message : String(e))
+  } finally {
+    btn.disabled = false
+    btn.textContent = '进入'
+  }
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitPin() })
+try { selfLog('main-ok') } catch (e) {}
+</script>
+</body>
+</html>`
+
+// ---------------------------------------------------------------------------
 // HTTP server
 // ---------------------------------------------------------------------------
 const server = http.createServer(async (req, res) => {
@@ -694,8 +832,9 @@ if (pathname === '/favicon.ico') {
   return
 }
 
-  // 1. PIN gate
-  if (pathname === '/auth' && req.method === 'POST') {    let parsed = {}
+  // 1. PIN gate: on success, drop a session cookie and reload into the GUI.
+  if (pathname === '/auth' && req.method === 'POST') {
+    let parsed = {}
     try {
       const raw = (await readBody(req)).toString('utf8')
       parsed = raw ? JSON.parse(raw) : {}
@@ -705,8 +844,10 @@ if (pathname === '/favicon.ico') {
       return
     }
     if (parsed.pin === PIN) {
+      const token = issueToken()
+      res.setHeader('set-cookie', 'dsh_pin=' + token + '; Path=/; Max-Age=2592000; SameSite=Lax')
       res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ token: issueToken() }))
+      res.end(JSON.stringify({ ok: true }))
     } else {
       res.writeHead(401, { 'content-type': 'application/json' })
       res.end(JSON.stringify({ error: 'bad pin' }))
@@ -714,19 +855,13 @@ if (pathname === '/favicon.ico') {
     return
   }
 
-  // 2. token check. /events may carry the token in the query string because
-  // EventSource cannot set headers; everything else requires the header.
-  const queryToken = url.searchParams.get('token')
-  const allowed = authorized(req) || (pathname === '/events' && queryToken && tokens.has(queryToken))
-  if (pathname === '/auth/check') {
-    res.writeHead(allowed ? 200 : 401, { 'content-type': 'application/json' })
-    res.end(JSON.stringify({ ok: allowed }))
-    return
-  }
+  // 2. Cookie check (the GUI is served verbatim; browsers carry the cookie
+  //    on every request including assets and EventSource).
+  const allowed = authorized(req)
   if (!allowed) {
-    if (pathname === '/') {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(UI)
+    if (pathname === '/' || pathname === '/index.html') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
+      res.end(PIN_UI)
       return
     }
     res.writeHead(401, { 'content-type': 'application/json' })
@@ -734,27 +869,8 @@ if (pathname === '/favicon.ico') {
     return
   }
 
-  // 3. SSE event bridge (authorized above).
-  if (pathname === '/events') {
-    subscribeSSE(res)
-    return
-  }
-
-  // 4. API reverse proxy
-  if (pathname.startsWith('/api/')) {
-    proxy(req, res, pathname, url.search)
-    return
-  }
-
-  // 5. UI root
-  if (pathname === '/' || pathname === '/index.html') {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-    res.end(UI)
-    return
-  }
-
-  res.writeHead(404, { 'content-type': 'application/json' })
-  res.end(JSON.stringify({ error: 'not found' }))
+  // 3. Everything else: the original GUI, verbatim.
+  proxyToGui(req, res, pathname, url.search)
 }
 
 server.listen(PORT, '0.0.0.0', () => {
@@ -763,6 +879,41 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('DSH_MOBILE_PIN=' + PIN)
   console.log('DSH_MOBILE_BUILD=' + BUILD)
   logf('[gateway]', 'listening on :' + PORT + ' (build ' + BUILD + ')')
+})
+
+// WebSocket upgrade proxy: the GUI's live-update channel (e.g. /api/events.mux)
+// is a WebSocket, so tunnel upgrades through with the same cookie auth + header
+// rewrite as the HTTP proxy.
+server.on('upgrade', (req, socket, head) => {
+  if (!authorized(req)) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n')
+    socket.destroy()
+    return
+  }
+  const targetUrl = new URL(req.url, TARGET)
+  const headers = {}
+  for (const key of Object.keys(req.headers)) {
+    const lower = key.toLowerCase()
+    if (lower === 'host' || lower === 'origin' || lower === 'referer' || lower === 'cookie' || lower === 'x-dsh-token') continue
+    headers[key] = req.headers[key]
+  }
+  const proxyReq = http.request({
+    host: targetUrl.hostname,
+    port: targetUrl.port,
+    path: targetUrl.pathname + targetUrl.search,
+    method: req.method,
+    headers,
+  })
+  proxyReq.on('upgrade', (proxyRes, proxySocket) => {
+    const rawHead = ['HTTP/1.1 101 Switching Protocols']
+    for (const key of Object.keys(proxyRes.headers)) rawHead.push(key + ': ' + proxyRes.headers[key])
+    socket.write(rawHead.join('\r\n') + '\r\n\r\n')
+    proxySocket.pipe(socket)
+    socket.pipe(proxySocket)
+  })
+  proxyReq.on('error', () => socket.destroy())
+  proxyReq.end()
+  if (head && head.length) proxyReq.write(head)
 })
 
 function getLanIp() {
