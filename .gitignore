@@ -17,3 +17,7 @@ gateway.log
 cloudflared.exe
 *.log
 mobile-app.png
+
+nextchat/
+bridge-out.txt
+bridge-err.txt
