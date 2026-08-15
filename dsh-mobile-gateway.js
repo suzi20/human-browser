@@ -20,7 +20,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const crypto = require('node:crypto')
 
-const BUILD = 'build-20'
+const BUILD = 'build-21'
 const LOG_FILE = path.join(__dirname, 'gateway.log')
 
 // Durable log: every line also lands in gateway.log so the agent can read what
@@ -614,7 +614,7 @@ input{font:inherit;color:var(--text);border:0;outline:none;background:transparen
   <div class="pin-input-wrap"><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="PIN 码" autocomplete="off"></div>
   <button class="pin-btn" onclick="__dsbSafeSubmit()">进入</button>
   <p class="pin-err" id="pinErr"></p>
-  <p class="pin-build">build-20</p>
+  <p class="pin-build">build-21</p>
 </div>
 <script>
 function selfLog(msg, extra) {
@@ -626,7 +626,7 @@ function selfLog(msg, extra) {
     }).catch(function () {})
   } catch (e) {}
 }
-selfLog('page-loaded', { href: location.href, build: 'build-20' })
+selfLog('page-loaded', { href: location.href, build: 'build-21' })
 async function submitPin() {
   selfLog('submit-clicked')
   var btn = document.querySelector('.pin-btn')
@@ -665,6 +665,10 @@ const MOBILE_TWEAK_CSS = `
    details slide in as overlay drawers (toggle via the GUI's own buttons).
    Matches the GUI's narrow-mode threshold (SIDEBAR_AUTO_COLLAPSE = 1024). */
 @media (max-width: 1024px) {
+  /* The GUI's body artwork uses background-attachment:fixed, which mobile
+     browsers mis-render (offset/cropped arbitrarily). Use a clean solid
+     background on phones; desktop keeps the art. */
+  body { background-image: none !important; }
   .cr-nOG_frame { grid-template-columns: minmax(0, 1fr) 0px 0px !important; }
   .cr-nOG_sidebarCol, .cr-nOG_detailsCol {
     position: absolute !important;
